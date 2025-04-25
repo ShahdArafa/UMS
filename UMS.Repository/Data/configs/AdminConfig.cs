@@ -13,7 +13,12 @@ namespace UMS.Repository.Data.configs
     {
         public void Configure(EntityTypeBuilder<Admin> builder)
         {
-            builder.Property(A => A.Name).IsRequired();
+        //    builder.Property(A => A.Name).IsRequired();
+        //    builder.HasOne(a => a.Faculty)
+        //.WithOne(f => f.Admin)
+        //.HasForeignKey<Faculty>(f => f.Id);
+
+            builder.HasBaseType<User>();
         }
     }
 }

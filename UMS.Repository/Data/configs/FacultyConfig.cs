@@ -15,6 +15,17 @@ namespace UMS.Repository.Data.configs
         {
             builder.Property(F => F.Name).IsRequired();
 
+           
+
+            builder.Property(f => f.Id)
+                   .IsRequired(); // أو خليها .IsRequired(false) لو مش دايمًا فيه Admin
+
+            //builder
+            //    .HasOne(f => f.Admin)
+            //    .WithOne(a => a.Faculty)
+            //    .HasForeignKey<Faculty>(f => f.Id);
+            builder.HasBaseType<User>(); 
+
         }
     }
 }
