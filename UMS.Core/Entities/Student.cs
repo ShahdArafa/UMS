@@ -37,6 +37,9 @@ namespace UMS.Core.Entities
         [Required, MaxLength(100)]
         public string Name { get; set; }
 
+        public bool IsFirstSemester { get; set; }
+        public List<Registeration> Registrations { get; set; }
+
         // Navigation properties
         [ForeignKey(nameof(UserId))]
         public virtual User User { get; set; }

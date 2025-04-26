@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace UMS.Repository.Migrations
 {
     [DbContext(typeof(StoreContext))]
-    partial class StoreContextModelSnapshot : ModelSnapshot
+    [Migration("20250425203234_RegisterationProcess")]
+    partial class RegisterationProcess
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -41,7 +44,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Admins", (string)null);
+                    b.ToTable("Admins");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.Application", b =>
@@ -104,7 +107,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Applications", (string)null);
+                    b.ToTable("Applications");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.AssignmentSubmission", b =>
@@ -138,7 +141,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("AssignmentSubmissions", (string)null);
+                    b.ToTable("AssignmentSubmissions");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.Assignments", b =>
@@ -182,7 +185,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasIndex("EnrollmentId");
 
-                    b.ToTable("Assignments", (string)null);
+                    b.ToTable("Assignments");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.Attendance", b =>
@@ -213,7 +216,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasIndex("EnrollmentId");
 
-                    b.ToTable("Attendances", (string)null);
+                    b.ToTable("Attendances");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.Course", b =>
@@ -253,7 +256,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasIndex("PrerequisiteCourseId");
 
-                    b.ToTable("Courses", (string)null);
+                    b.ToTable("Courses");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.CourseGroup", b =>
@@ -319,7 +322,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasIndex("TeachingAssistantId");
 
-                    b.ToTable("CourseGroups", (string)null);
+                    b.ToTable("CourseGroups");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.CourseResult", b =>
@@ -349,7 +352,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasIndex("TermResultId");
 
-                    b.ToTable("CourseResults", (string)null);
+                    b.ToTable("CourseResults");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.Enrollment", b =>
@@ -385,7 +388,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("Enrollments", (string)null);
+                    b.ToTable("Enrollments");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.EventPost", b =>
@@ -411,7 +414,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("eventPosts", (string)null);
+                    b.ToTable("eventPosts");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.ExamSchedule", b =>
@@ -445,7 +448,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.ToTable("ExamSchedules", (string)null);
+                    b.ToTable("ExamSchedules");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.Faculty", b =>
@@ -473,7 +476,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Faculties", (string)null);
+                    b.ToTable("Faculties");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.Notification", b =>
@@ -537,7 +540,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.Quiz", b =>
@@ -580,7 +583,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasIndex("EnrollmentId");
 
-                    b.ToTable("Quizzes", (string)null);
+                    b.ToTable("Quizzes");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.Registeration", b =>
@@ -606,7 +609,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("Registerations", (string)null);
+                    b.ToTable("Registerations");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.RegisterationPeriod", b =>
@@ -625,7 +628,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("RegisterationPeriods", (string)null);
+                    b.ToTable("RegisterationPeriods");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.Student", b =>
@@ -682,7 +685,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Students", (string)null);
+                    b.ToTable("Students");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.StudentTimeSlot", b =>
@@ -704,7 +707,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("StudentTimeSlots", (string)null);
+                    b.ToTable("StudentTimeSlots");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.Term", b =>
@@ -727,7 +730,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasKey("TermId");
 
-                    b.ToTable("Terms", (string)null);
+                    b.ToTable("Terms");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.TermResult", b =>
@@ -764,7 +767,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasIndex("TermId1");
 
-                    b.ToTable("TermResults", (string)null);
+                    b.ToTable("TermResults");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.TimeTable", b =>
@@ -808,7 +811,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("TimeTables", (string)null);
+                    b.ToTable("TimeTables");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.User", b =>
@@ -836,7 +839,7 @@ namespace UMS.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.Admin", b =>

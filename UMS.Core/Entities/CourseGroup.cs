@@ -21,6 +21,12 @@ namespace UMS.Core.Entities
         public int MaxSeats { get; set; }
         public int RegisteredCount { get; set; }
 
+        public TimeSpan StartTime { get; set; }
+        public TimeSpan EndTime { get; set; }
+        public DayOfWeek DayOfWeek { get; set; }
+       
+        public int AvailableSeats { get; set; }
+
         [ForeignKey(nameof(CourseId))]
         public Course Course { get; set; }
 

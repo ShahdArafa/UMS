@@ -408,6 +408,20 @@ namespace UMS.Controllers
             return Ok(acceptedApplications);
         }
 
+        [HttpGet("event-image/{fileName}")]
+        public IActionResult GetEventImage(string fileName)
+        {
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "EventImages", fileName);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("الصورة مش موجودة");
+
+            var fileBytes = System.IO.File.ReadAllBytes(filePath);
+            var contentType = "image/" + Path.GetExtension(filePath).TrimStart('.');
+
+            return File(fileBytes, contentType);
+        }
+
 
 
     }
