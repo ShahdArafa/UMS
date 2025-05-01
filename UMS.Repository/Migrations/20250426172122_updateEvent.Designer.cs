@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace UMS.Repository.Migrations
 {
     [DbContext(typeof(StoreContext))]
-    partial class StoreContextModelSnapshot : ModelSnapshot
+    [Migration("20250426172122_updateEvent")]
+    partial class updateEvent
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -496,9 +499,6 @@ namespace UMS.Repository.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool?>("Enabled")
-                        .HasColumnType("bit");
-
                     b.Property<int?>("FacultyId")
                         .HasColumnType("int");
 
@@ -541,28 +541,6 @@ namespace UMS.Repository.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Notifications");
-                });
-
-            modelBuilder.Entity("UMS.Core.Entities.NotificationPreference", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.ToTable("NotificationPreferences");
                 });
 
             modelBuilder.Entity("UMS.Core.Entities.Quiz", b =>
@@ -875,10 +853,6 @@ namespace UMS.Repository.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Password")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1090,17 +1064,6 @@ namespace UMS.Repository.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("UMS.Core.Entities.NotificationPreference", b =>
-                {
-                    b.HasOne("UMS.Core.Entities.User", "User")
-                        .WithOne("NotificationPreference")
-                        .HasForeignKey("UMS.Core.Entities.NotificationPreference", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("UMS.Core.Entities.Quiz", b =>
                 {
                     b.HasOne("UMS.Core.Entities.CourseGroup", "CourseGroup")
@@ -1273,12 +1236,6 @@ namespace UMS.Repository.Migrations
             modelBuilder.Entity("UMS.Core.Entities.TermResult", b =>
                 {
                     b.Navigation("CourseResults");
-                });
-
-            modelBuilder.Entity("UMS.Core.Entities.User", b =>
-                {
-                    b.Navigation("NotificationPreference")
-                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

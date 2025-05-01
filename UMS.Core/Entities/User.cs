@@ -16,6 +16,8 @@ namespace UMS.Core.Entities
         [Key]
         public int Id { get; set; }
 
+        public string FullName { get; set; }
+
         [Required, MaxLength(100)]
         public string Email { get; set; }
 
@@ -24,5 +26,7 @@ namespace UMS.Core.Entities
 
         [Required, MaxLength(50)]
         public string Role { get; set; } // e.g. "Student", "Faculty", "Admin"
+
+        public NotificationPreference NotificationPreference { get; set; }
     }
 }

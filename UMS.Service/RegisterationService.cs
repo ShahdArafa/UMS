@@ -13,15 +13,19 @@ namespace UMS.Service
         {
             public List<Course> GetSuggestedCourses(Student student, List<Course> allCourses, List<Registeration> previousRegistrations)
             {
+                previousRegistrations ??= new List<Registeration>();
+
                 var registeredCourseIds = previousRegistrations
-                .Select(r => r.Group.CourseId)
-                .ToHashSet();
+                    .Where(r => r.Group != null)               // تأكدي الأول إن Group مش null
+                    .Select(r => r.Group.CourseId)              // بعدين خدي CourseId
+                    .ToHashSet();
 
                 return allCourses
                     .Where(c =>
-                        !registeredCourseIds.Contains(c.Id) &&
-                        (c.PrerequisiteCourseId == null || registeredCourseIds.Contains(c.PrerequisiteCourseId.Value))
-                    ).ToList();
+                        !registeredCourseIds.Contains(c.Id) &&  // لو الطالب مش مسجل الكورس
+                        (c.PrerequisiteCourseId == null || registeredCourseIds.Contains(c.PrerequisiteCourseId.Value)) // ولو الشرط المسبق محقق
+                    )
+                    .ToList();
             }
 
             public bool IsWithinRegistrationPeriod(DateTime now, RegisterationPeriod period, StudentTimeSlot slot)

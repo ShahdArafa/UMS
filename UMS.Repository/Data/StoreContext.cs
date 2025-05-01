@@ -30,9 +30,12 @@ public class StoreContext : DbContext
     public DbSet<Quiz> Quizzes { get; set; }
     public DbSet<AssignmentSubmission> AssignmentSubmissions { get; set; }
 
+    public DbSet<NotificationPreference> NotificationPreferences { get; set; }
     public DbSet<Registeration> Registerations { get; set; }
     public DbSet<RegisterationPeriod> RegisterationPeriods { get; set; }
     public DbSet<StudentTimeSlot> StudentTimeSlots { get; set; }
+
+    public DbSet<StudentAccounts> studentAccounts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

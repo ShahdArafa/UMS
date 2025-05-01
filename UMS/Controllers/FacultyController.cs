@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client.Extensions.Msal;
@@ -18,6 +19,7 @@ namespace UMS.Controllers
             _context = context;
         }
 
+        [Authorize(Roles = "Faculty")]
         [HttpGet("{facultyId}/groups")]
         public async Task<IActionResult> GetFacultyGroups(int facultyId)
         {
@@ -60,6 +62,7 @@ namespace UMS.Controllers
             return Ok(weeks);
         }
 
+        [Authorize(Roles = "Faculty")]
         [HttpGet("course-group/{courseGroupId}/week/{weekNumber}")]
         public async Task<IActionResult> GetStudentsAttendanceForGroupAndWeek(int courseGroupId, string weekNumber)
         {
@@ -78,33 +81,53 @@ namespace UMS.Controllers
 
             return Ok(enrollmentsInGroup);
         }
-
+        [Authorize(Roles = "Faculty")]
         [HttpPost("assignments")]
+        [Consumes("multipart/form-data")] // عشان الفورم فيه فايل
         public async Task<IActionResult> PostAssignment([FromForm] AssignmentRegisterDto dto)
         {
-            
+            // ✅ نتحقق يدوي من الفاليديشن
+            if (!ModelState.IsValid)
+            {
+                var firstError = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .FirstOrDefault();
+
+                return BadRequest(new { Message = firstError ?? "Invalid data." });
+            }
+
+            // ✅ تحقق إن الجروب موجود
             var courseGroupExists = await _context.CourseGroups.AnyAsync(g => g.Id == dto.CourseGroupId);
             if (!courseGroupExists)
             {
-                return NotFound($"Course group with ID {dto.CourseGroupId} does not exist.");
+                return NotFound(new { Message = $"Course group with ID {dto.CourseGroupId} does not exist." });
             }
 
             string uploadedFilePath = null;
 
+            // ✅ رفع الملف لو موجود
             if (dto.File != null)
             {
                 var fileName = Path.GetFileNameWithoutExtension(dto.File.FileName);
                 var extension = Path.GetExtension(dto.File.FileName);
                 var uniqueName = $"{fileName}_{Guid.NewGuid()}{extension}";
-                var filePath = Path.Combine("wwwroot/assignments", uniqueName);
+                var savePath = Path.Combine("wwwroot/assignments");
+
+                if (!Directory.Exists(savePath))
+                    Directory.CreateDirectory(savePath);
+
+                var filePath = Path.Combine(savePath, uniqueName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await dto.File.CopyToAsync(stream);
                 }
 
-                uploadedFilePath = filePath;
+                uploadedFilePath = $"/assignments/{uniqueName}"; // نخزن المسار بالنسبة للسيرفر
             }
+
+            // ✅ إنشاء الأسايمنت
             var assignment = new Assignments
             {
                 CourseGroupId = dto.CourseGroupId,
@@ -117,9 +140,7 @@ namespace UMS.Controllers
             _context.Assignments.Add(assignment);
             await _context.SaveChangesAsync();
 
-            // send Notifications to Students
-
-            // هات الطلاب المسجلين في نفس الكورس
+            // ✅ إرسال Notifications لكل الطلاب المسجلين
             var courseId = await _context.CourseGroups
                 .Where(g => g.Id == assignment.CourseGroupId)
                 .Select(g => g.CourseId)
@@ -145,11 +166,10 @@ namespace UMS.Controllers
 
             await _context.SaveChangesAsync();
 
-
-
-
-            return Ok("Assignment Posted");
+            return Ok(new { message = "Assignment posted successfully." });
         }
+
+        [Authorize(Roles = "Faculty")]
         [HttpPost("PostQuiz")]
         public async Task<IActionResult> PostQuiz([FromBody] QuizRegisterDto dto)
         {
@@ -215,22 +235,36 @@ namespace UMS.Controllers
 
             return Ok(new { message = "Quiz uploaded successfully." });
         }
-        [HttpGet("{facultyId}/student-notifications")]
-        public async Task<IActionResult> GetStudentNotifications(int facultyId)
+        [Authorize(Roles = "Faculty")]
+        [HttpGet("{facultyId}/assignment-submissions-notifications")]
+        public async Task<IActionResult> GetAssignmentSubmissionsNotifications(int facultyId)
         {
-            var allNotifications = await _context.Notifications
-                .Where(n => n.FacultyId == facultyId && n.Message.Contains("has submitted a solution"))
+            var notifications = await _context.Notifications
+                .Where(n => n.FacultyId == facultyId
+                    && n.Message.Contains("has submitted a solution")
+                    && n.StudentId != null)
                 .OrderByDescending(n => n.CreatedAt)
                 .ToListAsync();
 
-            var latestNotifications = allNotifications
+            var latestNotifications = notifications
                 .GroupBy(n => new { n.AssignmentId, n.StudentId })
-                .Select(g => g.First())  // أول عنصر بعد الترتيب
+                .Select(g => g.First())
                 .OrderByDescending(n => n.CreatedAt)
+                .Select(n => new
+                {
+                    n.Id,
+                    n.Title,
+                    n.Message,
+                    n.CreatedAt,
+                    n.IsRead,
+                    FileDownloadUrl = $"{Request.Scheme}://{Request.Host}{n.FileUrl}" // لينك كامل جاهز للتحميل
+                   
+                })
                 .ToList();
 
             return Ok(latestNotifications);
         }
+
 
 
     }

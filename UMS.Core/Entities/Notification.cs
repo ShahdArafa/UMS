@@ -25,6 +25,8 @@ namespace UMS.Core.Entities
         public string? FileUrl { get; set; } // لينك الجدول
         public bool? IsRead { get; set; } = false;
 
+        public bool? Enabled { get; set; }
+
         public int? ApplicationId { get; set; }
         [ForeignKey(nameof(ApplicationId))]
         public virtual Application? Application { get; set; }

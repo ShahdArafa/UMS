@@ -19,9 +19,8 @@ namespace UMS.Core.Entities
 
             public string? Description { get; set; }
 
-            public string? ImagePath { get; set; }
-
-            public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public byte[]? ImageData { get; set; } // لازم يكون Byte[]
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
 
            
         }

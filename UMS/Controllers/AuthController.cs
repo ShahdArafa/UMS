@@ -112,31 +112,102 @@
 //        }
 
 //        //Login
-//        [HttpPost("login")]
-//        public async Task<IActionResult> Login([FromBody] Core.Entities.DTOs.LoginRequest request)
-//        {
-//            var user = await _userManager.FindByEmailAsync(request.Email);
-//            if (user == null)
-//                return Unauthorized(new { message = "Invalid email or password." });
+//       [ApiController]
+using Microsoft.AspNetCore.Identity.Data;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using UMS.Core.Entities;
+using UMS.Core.Entities.DTOs;
 
-//            var isPasswordValid = await _userManager.CheckPasswordAsync(user, request.Password);
-//            if (!isPasswordValid)
-//                return Unauthorized(new { message = "Invalid email or password." });
+[Route("api/[controller]")]
 
-//            //var roles = await _userManager.GetRolesAsync(user);
-//            var token = await tokenService.CreateTokenAsync(user, _userManager);
+public class AuthController : ControllerBase
+{
+    private readonly StoreContext _context;
+    private readonly IConfiguration _configuration;
 
-//            return Ok(new
-//            {
-//                token,
-//                user = new
-//                {
-//                    user.Id,
-//                    user.Name,
-//                    user.Email,
-//                    user.Role
-//                }
-//            });
+    public AuthController(StoreContext context, IConfiguration configuration)
+    {
+        _context = context;
+        _configuration = configuration;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Login(Microsoft.AspNetCore.Identity.Data.LoginRequest loginDto)
+    {
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Email == loginDto.Email && u.Password == loginDto.Password);
+
+        if (user == null)
+            return Unauthorized(new { message = "Invalid email or password" });
+
+        var token = GenerateJwtToken(user);
+
+        var response = new AuthResponse
+        {
+            Token = token,
+            FullName =user.FullName,
+            Role = user.Role,
+            UserId = user.Id
+        };
+
+        if (user.Role == "Student")
+        {
+            var student = await _context.Students
+                .Where(s => s.UserId == user.Id)
+                .Include(s => s.Enrollments)
+                .ThenInclude(e => e.Course)
+                .FirstOrDefaultAsync();
+
+            if (student != null)
+            {
+                response.StudentInfo = new StudentHomeDto
+                {
+                    StudentIdentifier = student.StudentIdentifier,
+                    Name = student.Name,
+                    GPA = student.GPA,
+                    TotalUnits = student.TotalUnits.GetValueOrDefault(),
+                    Courses = student.Enrollments.Select(e => new CourseDto
+                    {
+                        Id = e.Course.Id,
+                        Name = e.Course.Name,
+                        Department = e.Course.Department
+                    }).ToList()
+                };
+            }
+        }
+
+        return Ok(response);
+    }
+
+
+    private string GenerateJwtToken(User user)
+    {
+        var claims = new List<Claim>
+ {
+     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+     new Claim(ClaimTypes.Email, user.Email),
+     new Claim(ClaimTypes.Role, user.Role)
+ };
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            issuer: _configuration["Jwt:Issuer"],
+            audience: _configuration["Jwt:Audience"],
+            claims: claims,
+            expires: DateTime.Now.AddHours(2),
+            signingCredentials: creds);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+}
+
 
 //        }
 //    }

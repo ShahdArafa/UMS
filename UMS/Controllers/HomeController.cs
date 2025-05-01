@@ -17,14 +17,16 @@ namespace UMS.Controllers
             this.context = context;
         }
 
-        [HttpGet("{id}/home")]
-        public async Task<IActionResult> GetStudentDetails(int id)
+        [Authorize(Roles = "Student")]
+        [HttpGet("{userId}/home")]
+        public async Task<IActionResult> GetStudentDetails(int userId)
         {
-            // جلب بيانات الطالب بالإضافة إلى المواد المسجلة
+            // جلب الطالب باستخدام UserId، وشمول بيانات المستخدم والدورات
             var student = await context.Students
-                .Where(s => s.Id == id)
-                .Include(s => s.Enrollments)  // شمول المواد المسجلة
-                .ThenInclude(cr => cr.Course)  // شمول تفاصيل المادة
+                .Where(s => s.UserId == userId)
+                .Include(s => s.User) // علشان نجيب الـ Email
+                .Include(s => s.Enrollments)
+                    .ThenInclude(e => e.Course)
                 .FirstOrDefaultAsync();
 
             if (student == null)
@@ -32,29 +34,29 @@ namespace UMS.Controllers
                 return NotFound("الطالب غير موجود.");
             }
 
-            // تجهيز البيانات للعرض
-            var studentData = new
+            var result = new
             {
-                student.StudentIdentifier,
-                student.Name,
-                student.GPA,
-                student.TotalUnits,
-                Courses = student.Enrollments.Select(cr => new
+                studentId = student.Id,
+                name = student.Name,
+                email = student.User.Email, // من جدول الـ Users
+                enrollments = student.Enrollments.Select(e => new
                 {
-                    cr.Course.Id,
-                    cr.Course.Name,
-                    cr.Course.Department
+                    courseId = e.Course.Id,
+                    courseName = e.Course.Name,
+                    creditHours = e.Course.Units
                 }).ToList()
             };
 
-            return Ok(studentData);
+            return Ok(result);
         }
 
-       // [Authorize(Roles = "Student")]
+
+
+        [Authorize(Roles = "Student")]
         [HttpGet("notifications")]
         public async Task<IActionResult> GetStudentNotifications()
         {
-            var userId = int.Parse("4"); // ID من جدول الطلاب
+            var userId = int.Parse("4010"); // ID من جدول الطلاب
 
             var notifications = await context.Notifications
                 .Where(n => n.StudentId == userId)

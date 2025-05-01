@@ -7,15 +7,16 @@ using System.Threading.Tasks;
 
 namespace UMS.Core.Entities.DTOs
 {
-    
-    
-        public class CreateEventPostDto
-        {
-            public string Title { get; set; }
 
-            public string? Description { get; set; }
 
-            public IFormFile? Image { get; set; }
-        }
+    public class CreateEventPostDto
+    {
+        public string Title { get; set; }
+
+        public string? Description { get; set; }
+
+        public IFormFile? Image { get; set; } // الصورة اختيارية
+
     }
+}
 

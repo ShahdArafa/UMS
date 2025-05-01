@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Authorization;
 using UMS.Core.Entities;
 using UMS.Service;
 using UMS.Repository.Services;
+using Microsoft.AspNetCore.Identity;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace UMS.Controllers
 {
@@ -16,10 +18,10 @@ namespace UMS.Controllers
     public class AdminController : ControllerBase
     {
         private readonly StoreContext context;
-        private readonly OCRService _ocrService;
+        private readonly IOCRService _ocrService;
         private readonly EmailService _emailService;
 
-        public AdminController(StoreContext context , OCRService ocrService , EmailService emailService)
+        public AdminController(StoreContext context , IOCRService ocrService , EmailService emailService)
         {
             this.context = context;
             _ocrService = ocrService;
@@ -28,7 +30,7 @@ namespace UMS.Controllers
 
 
 
-
+        [Authorize(Roles = "Admin")]
         [HttpGet("all")]
         public IActionResult GetAllApplications()
         {
@@ -59,7 +61,7 @@ namespace UMS.Controllers
         }
 
 
-       // [Authorize(Roles = "Admin")]
+         [Authorize(Roles = "Admin")]
         [HttpPost("upload-course-file")]
         public async Task<IActionResult> UploadCourseFile(IFormFile file)
         {
@@ -113,7 +115,7 @@ namespace UMS.Controllers
             }
         }
 
-       
+        [Authorize(Roles = "Admin")]
         [HttpPost("upload-course-schedule")]
         public async Task<IActionResult> UploadCourseSchedule(IFormFile file)
         {
@@ -164,6 +166,7 @@ namespace UMS.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+        [Authorize(Roles = "Admin")]
         [HttpGet("notifications")]
         public async Task<IActionResult> GetAdminNotifications()
         {
@@ -179,6 +182,7 @@ namespace UMS.Controllers
 
             return Ok(notifications);
         }
+        [Authorize(Roles = "Admin")]
         [HttpGet("notifications/unread-count")]
         public async Task<IActionResult> GetUnreadNotificationCount()
         {
@@ -192,7 +196,7 @@ namespace UMS.Controllers
 
             return Ok(new { unreadCount = count });
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpPut("notifications/mark-as-read/{id}")]
         public async Task<IActionResult> MarkNotificationAsRead(int id)
         {
@@ -222,6 +226,7 @@ namespace UMS.Controllers
 
             return Ok(result);
         }
+        [Authorize(Roles = "Admin")]
         [HttpGet("faculty/count")]
         public async Task<IActionResult> GetFacultyCount()
         {
@@ -229,32 +234,39 @@ namespace UMS.Controllers
             return Ok(new { facultyCount = count });
         }
 
+        [Authorize (Roles = "Admin")]
         [HttpPost("events/create")]
         public async Task<IActionResult> CreateEventPost([FromForm] CreateEventPostDto dto)
         {
-            string? imagePath = null;
+            byte[]? imageData = null;
 
             if (dto.Image != null)
             {
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "EventImages");
-                if (!Directory.Exists(uploadsFolder))
-                    Directory.CreateDirectory(uploadsFolder);
+                using var memoryStream = new MemoryStream();
+                await dto.Image.CopyToAsync(memoryStream);
+                memoryStream.Position = 0;
 
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(dto.Image.FileName);
-                var fullPath = Path.Combine(uploadsFolder, fileName);
+                using var originalImage = System.Drawing.Image.FromStream(memoryStream);
+                using var compressedStream = new MemoryStream();
 
-                using var stream = new FileStream(fullPath, FileMode.Create);
-                await dto.Image.CopyToAsync(stream);
+                var encoderParameters = new System.Drawing.Imaging.EncoderParameters(1);
+                encoderParameters.Param[0] = new System.Drawing.Imaging.EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 75l); // 50% quality (تقدري تزودي أو تقللي)
 
-                imagePath = $"/EventImages/{fileName}";
+                var jpegCodec = System.Drawing.Imaging.ImageCodecInfo.GetImageDecoders()
+                    .FirstOrDefault(c => c.FormatID == System.Drawing.Imaging.ImageFormat.Jpeg.Guid);
+
+                if (jpegCodec != null)
+                {
+                    originalImage.Save(compressedStream, jpegCodec, encoderParameters);
+                    imageData = compressedStream.ToArray();
+                }
             }
 
             var eventPost = new EventPost
             {
                 Title = dto.Title,
                 Description = dto.Description,
-                ImagePath = imagePath
-                // Removed CreatedByUserId
+                ImageData = imageData
             };
 
             context.eventPosts.Add(eventPost);
@@ -263,6 +275,7 @@ namespace UMS.Controllers
             return Ok(new { message = "Event post created successfully" });
         }
 
+        [Authorize(Roles = "Admin , Student , Faculty")]
         [HttpGet("events")]
         public async Task<IActionResult> GetAllEventPosts()
         {
@@ -273,7 +286,7 @@ namespace UMS.Controllers
                     e.Id,
                     e.Title,
                     e.Description,
-                    ImageUrl = $"{Request.Scheme}://{Request.Host}{e.ImagePath}",
+                    ImageBase64 = e.ImageData != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(e.ImageData)}" : null,
                     e.CreatedAt,
                 })
                 .ToListAsync();
@@ -281,6 +294,8 @@ namespace UMS.Controllers
             return Ok(posts);
         }
 
+
+        [Authorize(Roles = "Admin")]
         [HttpPost("application/process-ocr/{id}")]
         public async Task<IActionResult> ProcessApplicationOCR(int id)
         {
@@ -327,6 +342,7 @@ namespace UMS.Controllers
                 return StatusCode(500, new { message = "An error occurred while processing OCR.", error = ex.Message });
             }
         }
+        [Authorize(Roles = "Admin")]
         [HttpPost("application/generate-credentials/{applicationId}")]
         public async Task<IActionResult> GenerateCredentials(int applicationId)
         {
@@ -391,6 +407,15 @@ namespace UMS.Controllers
                        $"مع تمنياتنا بالتوفيق،\nإدارة الجامعة"
             });
 
+            var studentAccounts = new StudentAccounts
+            {
+                UniversityEmail = universityEmail,
+                HashedPassword = hashedPassword,
+                StudentId = student.Id
+            };
+            context.studentAccounts.Add(studentAccounts);
+            await context.SaveChangesAsync();
+
             return Ok(new
             {
                 message = "Student account created and credentials sent via email.",
@@ -398,6 +423,7 @@ namespace UMS.Controllers
                 universityEmail
             });
         }
+        [Authorize(Roles = "Admin")]
         [HttpGet("accepted-applications")]
         public async Task<IActionResult> GetAcceptedApplications()
         {
@@ -407,11 +433,14 @@ namespace UMS.Controllers
 
             return Ok(acceptedApplications);
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpGet("event-image/{fileName}")]
         public IActionResult GetEventImage(string fileName)
         {
             var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "EventImages", fileName);
+
+            // Debug
+            Console.WriteLine("Looking for file at: " + filePath);
 
             if (!System.IO.File.Exists(filePath))
                 return NotFound("الصورة مش موجودة");
@@ -421,6 +450,7 @@ namespace UMS.Controllers
 
             return File(fileBytes, contentType);
         }
+
 
 
 
