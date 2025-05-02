@@ -12,6 +12,7 @@ namespace UMS.Core.Entities.DTOs
         public string Name { get; set; }
         public double GPA { get; set; }
         public int TotalUnits { get; set; }
+        public string UniversityEmail { get; set; }
 
         public List<CourseDto> Courses { get; set; }
 

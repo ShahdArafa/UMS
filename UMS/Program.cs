@@ -150,9 +150,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 
-//builder.Services.AddIdentity<AppUser, IdentityRole>()
-//    .AddEntityFrameworkStores<StoreContext>()
-//    .AddDefaultTokenProviders();
+builder.Services.AddIdentity<AppUser, IdentityRole>()
+    .AddEntityFrameworkStores<StoreContext>()
+    .AddDefaultTokenProviders();
 
 
 

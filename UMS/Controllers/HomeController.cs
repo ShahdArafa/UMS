@@ -17,49 +17,53 @@ namespace UMS.Controllers
             this.context = context;
         }
 
-        [Authorize(Roles = "Student")]
-        [HttpGet("{userId}/home")]
+        [HttpGet("student-details/{userId}")]
         public async Task<IActionResult> GetStudentDetails(int userId)
         {
-            // جلب الطالب باستخدام UserId، وشمول بيانات المستخدم والدورات
+            // جلب بيانات الطالب بالإضافة إلى المواد المسجلة
             var student = await context.Students
                 .Where(s => s.UserId == userId)
-                .Include(s => s.User) // علشان نجيب الـ Email
-                .Include(s => s.Enrollments)
-                    .ThenInclude(e => e.Course)
+                .Include(s => s.Enrollments)  // شمول المواد المسجلة
+                .ThenInclude(cr => cr.Course) // شمول تفاصيل المادة
                 .FirstOrDefaultAsync();
 
             if (student == null)
             {
-                return NotFound("الطالب غير موجود.");
+                return NotFound(new { message = "الطالب غير موجود." });
             }
 
-            var result = new
+            // تجهيز البيانات للعرض
+            var studentData = new
             {
-                studentId = student.Id,
-                name = student.Name,
-                email = student.User.Email, // من جدول الـ Users
-                enrollments = student.Enrollments.Select(e => new
+                student.StudentIdentifier,
+                student.Name,
+                student.GPA,
+                student.TotalUnits,
+                Courses = student.Enrollments.Select(cr => new
                 {
-                    courseId = e.Course.Id,
-                    courseName = e.Course.Name,
-                    creditHours = e.Course.Units
+                    cr.Course.Id,
+                    cr.Course.Name,
+                    cr.Course.Department
                 }).ToList()
             };
 
-            return Ok(result);
+            return Ok(studentData);
         }
 
 
-
         [Authorize(Roles = "Student")]
-        [HttpGet("notifications")]
-        public async Task<IActionResult> GetStudentNotifications()
+        [HttpGet("notifications/{userId}")]
+        public async Task<IActionResult> GetStudentNotifications(int userId)
         {
-            var userId = int.Parse("4010"); // ID من جدول الطلاب
+            // احصل على رقم الطالب (StudentId) من خلال userId
+            var student = await context.Students.FirstOrDefaultAsync(s => s.UserId == userId);
+            if (student == null)
+            {
+                return NotFound(new { message = "الطالب غير موجود." });
+            }
 
             var notifications = await context.Notifications
-                .Where(n => n.StudentId == userId)
+                .Where(n => n.StudentId == student.Id)  // نستخدم StudentId الصحيح
                 .OrderByDescending(n => n.CreatedAt)
                 .ToListAsync();
 
@@ -67,7 +71,7 @@ namespace UMS.Controllers
         }
 
 
-         [Authorize(Roles = "Student")]
+        [Authorize(Roles = "Student")]
         [HttpGet("notifications/unread-count")]
         public async Task<IActionResult> GetUnreadNotificationsCount()
         {

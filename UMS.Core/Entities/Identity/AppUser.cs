@@ -15,5 +15,9 @@ namespace UMS.Core.Entities.Identity
         public string Role { get; set; }
         //For Students 
         public string? StudentId { get; set; }
+
+        public string ResetOtp { get; set; }
+
+        public DateTime ResetOtpExpiry { get; set; }
     }
 }

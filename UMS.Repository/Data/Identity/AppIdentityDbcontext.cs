@@ -11,9 +11,15 @@ namespace UMS.Repository.Data.Identity
 {
     public class AppIdentityDbcontext:IdentityDbContext<AppUser>
     {
+
         public AppIdentityDbcontext(DbContextOptions<AppIdentityDbcontext> options):base(options)
         {
             
         }
+
+
+
+        public DbSet<AppUser> AppUsers { get; set; }
+
     }
 }

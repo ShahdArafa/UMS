@@ -27,6 +27,10 @@ namespace UMS.Core.Entities
         [Required, MaxLength(50)]
         public string Role { get; set; } // e.g. "Student", "Faculty", "Admin"
 
+        public string ResetOtp { get; set; }
+
+        public DateTime ResetOtpExpiry { get; set; }
+
         public NotificationPreference NotificationPreference { get; set; }
     }
 }

@@ -113,15 +113,21 @@
 
 //        //Login
 //       [ApiController]
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net.Mail;
+using System.Net;
 using System.Security.Claims;
 using System.Text;
 using UMS.Core.Entities;
 using UMS.Core.Entities.DTOs;
+using UMS.Core.Entities.Identity;
+using UMS.Service;
 
 [Route("api/[controller]")]
 
@@ -129,11 +135,13 @@ public class AuthController : ControllerBase
 {
     private readonly StoreContext _context;
     private readonly IConfiguration _configuration;
+    private readonly UserManager<AppUser> _userManager;
 
-    public AuthController(StoreContext context, IConfiguration configuration)
+    public AuthController(StoreContext context, IConfiguration configuration, UserManager<AppUser> userManager)
     {
         _context = context;
         _configuration = configuration;
+        _userManager = userManager;
     }
 
     [HttpPost]
@@ -150,9 +158,10 @@ public class AuthController : ControllerBase
         var response = new AuthResponse
         {
             Token = token,
-            FullName =user.FullName,
+            FullName = user.FullName,
             Role = user.Role,
-            UserId = user.Id
+            UserId = user.Id,
+            UserEmail = user.Email
         };
 
         if (user.Role == "Student")
@@ -165,12 +174,14 @@ public class AuthController : ControllerBase
 
             if (student != null)
             {
+
                 response.StudentInfo = new StudentHomeDto
                 {
                     StudentIdentifier = student.StudentIdentifier,
                     Name = student.Name,
                     GPA = student.GPA,
                     TotalUnits = student.TotalUnits.GetValueOrDefault(),
+
                     Courses = student.Enrollments.Select(e => new CourseDto
                     {
                         Id = e.Course.Id,
@@ -206,9 +217,84 @@ public class AuthController : ControllerBase
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    [AllowAnonymous]
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto model)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+        if (user == null)
+        {
+            return NotFound(new { message = "User with this email does not exist." });
+        }
+
+        // Generate 5-digit OTP
+        var otp = new Random().Next(10000, 99999).ToString();
+
+        // Store OTP & Expiry
+        user.ResetOtp = otp;
+        user.ResetOtpExpiry = DateTime.UtcNow.AddMinutes(10);
+        await _context.SaveChangesAsync();
+
+        // Send Email
+        var emailService = new EmailService();
+        var subject = "Your OTP Code";
+        var body = $"Your OTP code is: {otp}. It will expire in 10 minutes.";
+        await emailService.SendEmailAsync(user.Email, subject, body);
+
+        return Ok(new { message = "OTP has been sent to your email." });
+    }
+
+    public class EmailService
+    {
+        private readonly string smtpServer = "smtp.gmail.com";
+        private readonly int smtpPort = 587;
+        private readonly string senderEmail = "shahd.arafa.03@gmail.com";
+        private readonly string senderPassword = "onjpklachtnmaqhv"; // لازم يكون App Password لو Gmail
+
+        public async Task SendEmailAsync(string toEmail, string subject, string body)
+        {
+            using (var client = new SmtpClient(smtpServer, smtpPort))
+            {
+                client.EnableSsl = true;
+                client.Credentials = new NetworkCredential(senderEmail, senderPassword);
+
+                var mailMessage = new MailMessage(senderEmail, toEmail, subject, body)
+                {
+                    IsBodyHtml = true // لو بترسل HTML
+                };
+
+                await client.SendMailAsync(mailMessage);
+            }
+        }
+    }
+
+    //[AllowAnonymous]
+    //[HttpPost("verify-otp")]
+    //public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpDto model)
+    //{
+    //    var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+    //    if (user == null)
+    //    {
+    //        return NotFound(new { message = "User with this email does not exist." });
+    //    }
+
+    //    if (user.ResetOtp != model.Otp || user.ResetOtpExpiry < DateTime.UtcNow)
+    //    {
+    //        return BadRequest(new { message = "Invalid or expired OTP." });
+    //    }
+
+    //    // OTP verified — Clear it
+    //    user.ResetOtp = null;
+    //    user.ResetOtpExpiry = null;
+    //    await _context.SaveChangesAsync();
+
+    //    return Ok(new { message = "OTP verified successfully. You can now reset your password." });
+    //}
+
+    public class VerifyOtpDto
+    {
+        public string Email { get; set; }
+        public string Otp { get; set; }
+    }
 }
-
-
-//        }
-//    }
-//}
