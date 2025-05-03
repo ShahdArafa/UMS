@@ -61,7 +61,7 @@ namespace UMS.Controllers
         }
 
 
-         [Authorize(Roles = "Admin")]
+       //  [Authorize(Roles = "Admin")]
         [HttpPost("upload-course-file")]
         public async Task<IActionResult> UploadCourseFile(IFormFile file)
         {

@@ -16,9 +16,9 @@ namespace UMS.Controllers
         {
             this.context = context;
         }
-
+        //[Authorize(Policy = "StudentPolicy")]
         [HttpGet("student-details/{userId}")]
-        public async Task<IActionResult> GetStudentDetails(int userId)
+        public async Task<IActionResult> GetStudentDetails( [FromRoute]int userId)
         {
             // جلب بيانات الطالب بالإضافة إلى المواد المسجلة
             var student = await context.Students
@@ -51,7 +51,7 @@ namespace UMS.Controllers
         }
 
 
-        [Authorize(Roles = "Student")]
+       // [Authorize(Roles = "Student")]
         [HttpGet("notifications/{userId}")]
         public async Task<IActionResult> GetStudentNotifications(int userId)
         {
@@ -69,6 +69,7 @@ namespace UMS.Controllers
 
             return Ok(notifications);
         }
+
 
 
         [Authorize(Roles = "Student")]
