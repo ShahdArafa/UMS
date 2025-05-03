@@ -16,7 +16,7 @@ namespace UMS.Controllers
         {
             this.context = context;
         }
-        //[Authorize(Policy = "StudentPolicy")]
+        [Authorize(Policy = "StudentPolicy")]
         [HttpGet("student-details/{userId}")]
         public async Task<IActionResult> GetStudentDetails( [FromRoute]int userId)
         {
