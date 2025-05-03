@@ -51,7 +51,7 @@ namespace UMS.Controllers
         }
 
 
-       // [Authorize(Roles = "Student")]
+       [Authorize(Roles = "Student")]
         [HttpGet("notifications/{userId}")]
         public async Task<IActionResult> GetStudentNotifications(int userId)
         {

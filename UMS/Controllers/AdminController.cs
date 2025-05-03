@@ -372,7 +372,7 @@ namespace UMS.Controllers
             var user = new User
             {
                 Email = universityEmail,
-                Password = hashedPassword,
+               // Password = hashedPassword,
                 Role = "Student"
             };
             context.Users.Add(user);

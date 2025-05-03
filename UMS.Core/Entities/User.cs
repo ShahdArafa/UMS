@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Identity;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace UMS.Core.Entities
     // -----------------------
     //  User
     // -----------------------
-    public class User
+    public class User 
     {
         [Key]
         public int Id { get; set; }

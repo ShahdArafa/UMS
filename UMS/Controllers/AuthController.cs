@@ -128,7 +128,7 @@ using UMS.Core.Entities;
 using UMS.Core.Entities.DTOs;
 using UMS.Core.Entities.Identity;
 using UMS.Service;
-
+[ApiController]
 [Route("api/[controller]")]
 
 public class AuthController : ControllerBase
@@ -196,14 +196,17 @@ public class AuthController : ControllerBase
     }
 
 
+
+
+
     private string GenerateJwtToken(User user)
     {
         var claims = new List<Claim>
- {
-     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-     new Claim(ClaimTypes.Email, user.Email),
-     new Claim(ClaimTypes.Role, user.Role)
- };
+    {
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new Claim(ClaimTypes.Email, user.Email),
+        new Claim(ClaimTypes.Role, user.Role)
+    };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -218,5 +221,50 @@ public class AuthController : ControllerBase
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-   
+
+
+
+    //[HttpPost("login")]
+    //public async Task<IActionResult> Login([FromBody] Microsoft.AspNetCore.Identity.Data.LoginRequest loginDto)
+    //{
+    //    var user = await _userManager.FindByEmailAsync(loginDto.Email);
+    //    if (user == null || !await _userManager.CheckPasswordAsync(user, loginDto.Password))
+    //        return Unauthorized(new { message = "Invalid email or password" });
+
+    //    var token = GenerateJwtToken(user);
+
+    //    return Ok(new AuthResponse
+    //    {
+    //        Token = token,
+    //        FullName = user.Name,
+    //        Role = user.Role,
+    //        UserId = int.Parse(user.Id),
+    //        UserEmail = user.Email
+    //    });
+    //}
+
+    //private string GenerateJwtToken(AppUser user)
+    //{
+    //    var claims = new[]
+    //    {
+    //    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+    //    new Claim(ClaimTypes.Email, user.Email),
+    //    new Claim(ClaimTypes.Role, user.Role)
+    //};
+
+    //    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+    //    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+    //    var token = new JwtSecurityToken(
+    //        issuer: _configuration["Jwt:Issuer"],
+    //        audience: _configuration["Jwt:Audience"],
+    //        claims: claims,
+    //        expires: DateTime.UtcNow.AddHours(2),
+    //        signingCredentials: creds
+    //    );
+
+    //    return new JwtSecurityTokenHandler().WriteToken(token);
+    //}
+
+
 }
